@@ -25,6 +25,7 @@ class BasicModel:
         print("A: {}".format(self.A.weights))
         print("B: {}".format(self.B.weights))
         print("Loss: {}".format(loss[-1]))
+        return self
 
     def predict(self, x):
         if not p:
