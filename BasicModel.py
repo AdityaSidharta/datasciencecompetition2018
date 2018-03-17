@@ -22,7 +22,7 @@ class BasicModel:
     def loss(self, A, B, X, y):
         k = self.get_bin_size(X)
         prediction = np.dot(1. / 12. * A, np.matmul(X, np.exp(k)**B))
-        loss = np.mean(np.square(prediction - y))
+        loss = np.mean(np.square(prediction - y.values))
         return loss
 
     def fit(self, X, y, A=None, B=None, learning_rate=0.0001, beta_1=0.90, beta_2=0.999, max_iter=10000, theta=0.00000001,

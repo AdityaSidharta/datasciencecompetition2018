@@ -26,7 +26,7 @@ class WeightedBasicModel:
         assert y.shape[1] == 50
 
         k = self.get_bin_size(X)
-        prediction = np.dot(1. / 12. * A, np.matmul(X.values[:, 2:], np.exp(B * k)))
+        prediction = np.dot(1. / 12. * A, np.matmul(X[[i for i in range(34)]].values, np.exp(B * k)))
         loss = np.mean(np.square(prediction - np.multiply(y, prob).T))
         return loss
 
