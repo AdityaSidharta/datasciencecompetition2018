@@ -25,7 +25,7 @@ class BasicModel:
         loss = np.mean(np.square(prediction - y))
         return loss
         
-    def fit(self, X, y, learning_rate=0.0001, beta_1 = 0.90, beta_2 = 0.999, max_iter=10000, theta=0.00000001, epsilon = 10 ** (-8)):
+    def fit(self, X, y, learning_rate=0.0001, beta_1 = 0.90, beta_2 = 0.999, max_iter=10000, theta=0.000001, epsilon = 10 ** (-8)):
         loss = []
         A = self.A
         B = self.B
@@ -46,18 +46,22 @@ class BasicModel:
             loss.append(new)
             grad_a = gradloss_a(A, B, X, y)
             grad_b = gradloss_b(A, B, X, y)
+#             print(grad_a, grad_b)
+            A = A - learning_rate * grad_a
+            B = B - learning_rate * grad_b
+#             print(A, B)
 
-            v_grad_a = (beta_1 * v_grad_a) + ((1 - beta_1) * grad_a)
-            v_grad_b = (beta_1 * v_grad_b) + ((1 - beta_1) * grad_b)
-            s_grad_a = (beta_2 * s_grad_a) + ((1 - beta_2) * grad_a**2)
-            s_grad_b = (beta_2 * s_grad_b) + ((1 - beta_2) * grad_b**2)
-            #v_grad_a = v_grad_a / (1 - beta_1**(i))
-            #v_grad_b = v_grad_b / (1 - beta_1**(i))
-            #s_grad_a = s_grad_a / (1 - beta_2**(i))
-            #s_grad_b = s_grad_b / (1 - beta_2**(i))
+#             v_grad_a = (beta_1 * v_grad_a) + ((1 - beta_1) * grad_a)
+#             v_grad_b = (beta_1 * v_grad_b) + ((1 - beta_1) * grad_b)
+#             s_grad_a = (beta_2 * s_grad_a) + ((1 - beta_2) * grad_a**2)
+#             s_grad_b = (beta_2 * s_grad_b) + ((1 - beta_2) * grad_b**2)
+#             #v_grad_a = v_grad_a / (1 - beta_1**(i))
+#             #v_grad_b = v_grad_b / (1 - beta_1**(i))
+#             #s_grad_a = s_grad_a / (1 - beta_2**(i))
+#             #s_grad_b = s_grad_b / (1 - beta_2**(i))
             
-            A = A - learning_rate * v_grad_a / np.sqrt(s_grad_a + epsilon)
-            B = B - learning_rate * v_grad_b / np.sqrt(s_grad_b + epsilon)
+#             A = A - learning_rate * v_grad_a / np.sqrt(s_grad_a + epsilon)
+#             B = B - learning_rate * v_grad_b / np.sqrt(s_grad_b + epsilon)
         self.A = A
         self.B = B
 
