@@ -10,14 +10,18 @@ class BasicModel:
         self.X = None
         self.y = None
 
-    def _loss(self, A, B, bin_values, ground_truth):
-        if bin_values.ndim == 1:
-            k = np.arange(len(bin_values))
+    def get_bin_size(self, X):
+        if X.ndim == 1:
+            k = np.arange(len(X))
         else:
-            k = np.arange(bin_values.shape[1])
-        return np.mean(np.square(np.dot(1 / 12. * A, np.matmul(bin_values, np.exp(k)**B)) - ground_truth))
+            k = np.arange(X.shape[1])
+        return k
 
-    def fit(self, X, y, A=3., B=0.34, theta=0.0001, learning_rate=0.001, max_iter=10000):
+    def _loss(self, A, B, X, ground_truth):
+        k = self.get_bin_size(X)
+        return np.mean(np.square(np.dot(1 / 12. * A, np.matmul(X, np.exp(k)**B)) - ground_truth))
+
+    def fit(self, X, y, A=3., B=0.34, theta=0.0001, learning_rate=0.001, max_iter=10000, return_loss=False):
         loss = []
         self.X = X
         self.y = y
@@ -40,7 +44,7 @@ class BasicModel:
         print("A: {}".format(self.A))
         print("B: {}".format(self.B))
         print("Loss: {}".format(loss[-1]))
-        return self
+        return self if not return_loss else self, loss
 
     def predict(self, X):
         if not (self.A and self.B):
@@ -48,10 +52,7 @@ class BasicModel:
         else:
             A = self.A
             B = self.B
-            if X.ndim == 1:
-                k = np.arange(len(X))
-            else:
-                k = np.arange(X.shape[1])
+            k = self.get_bin_size(X)
             return np.dot(1 / 12. * A, np.matmul(X, np.exp(k) ** B))
 
     def score(self, X=None, y=None):
@@ -64,5 +65,8 @@ class BasicModel:
 if __name__ == '__main__':
     X = np.random.randn(1000).reshape(200, 5)
     y = np.random.randn(200)
-    clf = BasicModel().fit(X, y)
+    clf, loss = BasicModel().fit(X, y, return_loss=True)
     print clf.score()
+    import matplotlib.pyplot as plt
+    plt.plot(np.arange(len(loss)), loss)
+    plt.show()
