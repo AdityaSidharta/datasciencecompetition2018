@@ -64,11 +64,11 @@ if __name__ == '__main__':
     # df_corr = pd.read_csv(FIELD_CORR_TABLE)
     # linear_normalised_df = normalise_correlation(filter_negative_correlation(add_lat_long(df_corr)))
     train_df = pd.read_csv("data_singapore_only.csv").sort_values("week")
-    gauge_df = pd.read_csv("datasets/gauge.csv")
+    gauge_df = pd.read_csv("to_toto_4.csv")
     corr = compute_correlation(train_df, gauge_df)
     station_dict = {i: "corr_station_" + str(i) for i in range(NUM_STATIONS)}
     station_dict.update({"level_0": "lat", "level_1": "long"})
     LATLONG_MAP_PATH = os.path.join(os.getcwd(), "processed_data/map_latlong.csv")
     latlong_map = pd.read_csv(LATLONG_MAP_PATH)
     add_coords(pd.DataFrame(corr).reset_index().rename(columns=station_dict), latlong_map)\
-        .to_csv("toto_corr_3.csv", index=False)
+        .fillna(0).to_csv("toto_corr_i_8.csv", index=False)
