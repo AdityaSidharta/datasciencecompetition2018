@@ -14,8 +14,8 @@ def plot_heatmap(csv_path):
     sns.heatmap(viz, square=True)
 
 def plot_heatmap_df(data):
-    average = np.sum(np.arange(34) * data.values[:,2:-1], axis=1) /2016
-    data['ave'] = average
+#     average = np.sum(np.arange(34) * data.values[:,2:-1], axis=1) /2016
+#     data['ave'] = average
     sns.set()
     viz = data.pivot("lat", "long", "ave")
     f, ax = plt.subplots(figsize=(10, 10))
