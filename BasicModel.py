@@ -25,10 +25,10 @@ class BasicModel:
         loss = np.mean(np.square(prediction - y))
         return loss
         
-    def fit(self, X, y, learning_rate=0.00000001, max_iter=1000000, theta=0.00000000000000001):
+    def fit(self, X, y, A=None, B=None, learning_rate=0.000000001, max_iter=10000, theta=0.00000001):
         loss = []
-        A = self.A
-        B = self.B
+        A = self.A if A is None else A
+        B = self.B if B is None else B
         self.X = X
         self.y = y
         initial_loss = self.loss(A, B, X, y)
@@ -37,7 +37,6 @@ class BasicModel:
         print("Shape of y: {}".format(self.y.shape))
 
         for i in range(max_iter):
-            print (i)
             new = self.loss(A, B, X, y)
             if loss:
                 prev = loss[-1]
