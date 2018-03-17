@@ -1,38 +1,56 @@
-def displace(lat, lng, theta, distance):
+import numpy as np
+import pandas as pd
+import os
+from math import radians
 
-    """
-    Displace a LatLng theta degrees counterclockwise and some
-    meters in that direction.
-    Notes:
-        http://www.movable-type.co.uk/scripts/latlong.html
-        0 DEGREES IS THE VERTICAL Y AXIS! IMPORTANT!
-    Args:
-        theta:    A number in degrees.
-        distance: A number in meters.
-    Returns:
-        A new LatLng.
-    """
-    E_RADIUS = 6371000
 
-    theta = np.float32(theta)
+R_EARTH = 6373.0 * 1000
+MAX_DISTANCE = 60 * 1000
+SINGAPORE_LAT_LON = (1.3521, 103.8198)
+LATLONG_MAP_PATH = os.path.join(os.getcwd(), "processed_data/map_latlong.csv")
 
-    delta = np.divide(np.float32(distance), np.float32(E_RADIUS))
 
-    def to_radians(theta):
-        return np.divide(np.dot(theta, np.pi), np.float32(180.0))
+def get_distance_to_list_of_pts(pt, list_of_pts):
 
-    def to_degrees(theta):
-        return np.divide(np.dot(theta, np.float32(180.0)), np.pi)
+    lats = np.array(map(lambda x: x[0], list_of_pts))
+    lons = np.array(map(lambda x: x[1], list_of_pts))
+    lat1 = radians(pt[0])
+    lon1 = radians(pt[1])
+    lat2 = np.radians(lats)
+    lon2 = np.radians(lons)
 
-    theta = to_radians(theta)
-    lat1 = to_radians(lat)
-    lng1 = to_radians(lng)
-    c = np.sin(lat1) * np.cos(delta) + np.cos(lat1) * np.sin(delta) * np.cos(theta)
-    lat2 = np.arcsin(c)
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = np.sin(dlat / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2) ** 2
+    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
 
-    lng2 = lng1 + np.arctan2( np.sin(theta) * np.sin(delta) * np.cos(lat1),
-                              np.cos(delta) - np.sin(lat1) * np.sin(lat2))
+    distance = R_EARTH * c  # distance in m
+    return distance
 
-    lng2 = (lng2 + 3 * np.pi) % (2 * np.pi) - np.pi
 
-    return (to_degrees(lat2), to_degrees(lng2))
+def filter_distance(df):
+    ''' filter from dataframe of radar's reading with lat long that has been estimated '''
+    return df[get_distance_to_list_of_pts(SINGAPORE_LAT_LON, df[["map_lat", "map_long"]].values) <= MAX_DISTANCE]
+
+
+def valid_lat_long():
+    latlong_map = filter_distance(pd.read_csv(LATLONG_MAP_PATH))
+    return set(map(lambda x, y: (x, y), latlong_map.lat, latlong_map.long))
+
+
+if __name__ == '__main__':
+    valid_lat_long = valid_lat_long()
+    import os
+    from tqdm import tqdm
+    dir_path = os.path.join(os.getcwd(), "datasets/")
+    radar = os.path.join(dir_path, "radar")
+    all_df = []
+    for date_csv in tqdm(os.listdir(radar)):
+        fpath = os.path.join(radar, date_csv)
+        df = pd.read_csv(fpath)
+        df = df[df.apply(lambda x: (x["lat"], x["long"]) in valid_lat_long, axis=1)]
+        week = date_csv[-6:-4]
+        df["week"] = np.repeat(week, len(df))
+        all_df.append(df)
+    df = pd.concat(all_df)
+    df.to_csv("full_training_data.csv", index=False)
