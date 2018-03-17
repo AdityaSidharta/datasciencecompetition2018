@@ -1,7 +1,6 @@
 import autograd.numpy as np
 from autograd import grad
 
-
 class BasicModel:
 
     def __init__(self):
@@ -19,7 +18,7 @@ class BasicModel:
 
     def _loss(self, A, B, X, ground_truth):
         k = self.get_bin_size(X)
-        return np.mean(np.square(np.dot(1 / 12. * A, np.matmul(X, np.exp(k)**B)) - ground_truth))
+        return np.mean(np.square(np.dot(1. / 12. * A, np.matmul(X, np.exp(k)**B)) - ground_truth))
 
     def fit(self, X, y, A=3., B=0.34, theta=0.0001, learning_rate=0.001, max_iter=10000, return_loss=False):
         loss = []
@@ -53,7 +52,7 @@ class BasicModel:
             A = self.A
             B = self.B
             k = self.get_bin_size(X)
-            return np.dot(1 / 12. * A, np.matmul(X, np.exp(k) ** B))
+            return np.dot(1. / 12. * A, np.matmul(X, np.exp(k) ** B))
 
     def score(self, X=None, y=None):
         if not (X and y):
