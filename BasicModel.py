@@ -1,41 +1,56 @@
 import autograd.numpy as np
 from autograd import grad
+import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 class BasicModel:
-
     def __init__(self):
-        self.A = None
-        self.B = None
+        self.A = 3.
+        self.B = .34
         self.X = None
         self.y = None
 
     def get_bin_size(self, X):
         if X.ndim == 1:
+            assert len(X) == 34
             k = np.arange(len(X))
         else:
+            assert X.shape[1] == 34
             k = np.arange(X.shape[1])
         return k
 
-    def _loss(self, A, B, X, ground_truth):
+    def loss(self, A, B, X, y):
         k = self.get_bin_size(X)
-        return np.mean(np.square(np.dot(1. / 12. * A, np.matmul(X, np.exp(k)**B)) - ground_truth))
-
-    def fit(self, X, y, A=3., B=0.34, theta=0.0001, learning_rate=0.001, max_iter=10000, return_loss=False):
+        prediction = np.dot(1. / 12. * A, np.matmul(X, np.exp(k)**B))
+        loss = np.mean(np.square(prediction - y))
+        return loss
+        
+    def fit(self, X, y, learning_rate=0.00000001, max_iter=1000000, theta=0.00000000000000001):
         loss = []
+        A = self.A
+        B = self.B
         self.X = X
         self.y = y
+        initial_loss = self.loss(A, B, X, y)
+        print("Initial_loss: {}".format(initial_loss))
+        print("Shape of x: {}".format(self.X.shape))
+        print("Shape of y: {}".format(self.y.shape))
 
         for i in range(max_iter):
-            new = self._loss(A, B, X, y)
+            print (i)
+            new = self.loss(A, B, X, y)
             if loss:
                 prev = loss[-1]
                 if np.absolute(prev - new) / prev < theta:
+                    print ("Fak ye bebi wi converge")
                     break
             loss.append(new)
-            gradloss_a = grad(self._loss, argnum=0)(A, B, X, y)
-            gradloss_b = grad(self._loss, argnum=1)(A, B, X, y)
-            A = A - learning_rate * gradloss_a
-            B = B - learning_rate * gradloss_b
+            gradloss_a = grad(self.loss, argnum=0)
+            gradloss_b = grad(self.loss, argnum=1)
+            grad_a = gradloss_a(A, B, X, y)
+            grad_b = gradloss_b(A, B, X, y)
+            A = A - learning_rate * grad_a
+            B = B - learning_rate * grad_b
 
         self.A = A
         self.B = B
@@ -43,7 +58,7 @@ class BasicModel:
         print("A: {}".format(self.A))
         print("B: {}".format(self.B))
         print("Loss: {}".format(loss[-1]))
-        return self if not return_loss else self, loss
+        self.loss = loss
 
     def predict(self, X):
         if not (self.A and self.B):
@@ -58,14 +73,9 @@ class BasicModel:
         if not (X and y):
             X = self.X
             y = self.y
-        return self._loss(self.A, self.B, X, y)
-
-
-if __name__ == '__main__':
-    X = np.random.randn(1000).reshape(200, 5)
-    y = np.random.randn(200)
-    clf, loss = BasicModel().fit(X, y, return_loss=True)
-    print clf.score()
-    import matplotlib.pyplot as plt
-    plt.plot(np.arange(len(loss)), loss)
-    plt.show()
+        return self.loss(self.A, self.B, X, y)
+    
+    def plot_lost(self):
+        plt.plot(np.arange(len(loss)), loss)
+        plt.show()
+    
