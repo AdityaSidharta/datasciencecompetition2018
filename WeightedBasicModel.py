@@ -13,11 +13,11 @@ class WeightedBasicModel:
 
     def get_bin_size(self, X):
         if X.ndim == 1:
-            assert len(X) == 36
-            k = np.arange(len(X) - 2)
+            assert len(X) == 37
+            k = np.arange(len(X) - 3)
         else:
-            assert X.shape[1] == 36
-            k = np.arange(X.shape[1] - 2)
+            assert X.shape[1] == 37
+            k = np.arange(X.shape[1] - 3)
         return k
 
     def loss(self, A, B, X, y, prob):
@@ -26,8 +26,8 @@ class WeightedBasicModel:
         assert y.shape[1] == 50
 
         k = self.get_bin_size(X)
-        prediction = np.dot(1. / 12. * A, np.matmul(X[[i for i in range(34)]].values, np.exp(B * k)))
-        loss = np.mean(np.square(prediction - np.multiply(y, prob).T))
+        prediction = np.dot(1. / 12. * A, np.matmul(X[[str(i) for i in range(34)]].values, np.exp(B * k)))
+        loss = np.mean(np.multiply(np.square(prediction - y.values.T), prob.T))
         return loss
 
     def fit(self, X, y, learning_rate=0.0001, beta_1=0.90, beta_2=0.999, max_iter=10000, theta=0.00000001,
@@ -39,8 +39,8 @@ class WeightedBasicModel:
         self.X = X
         self.y = y
         self.prob_table = prob_table
-        idx = map(lambda x, y: (x, y), X["x"], X["y"])
-        prob = self.prob_table.set_index(["x", "y"]).loc[idx].values
+        idx = map(lambda x, y: (x, y), X["lat"], X["long"])
+        prob = self.prob_table.set_index(["lat", "long"]).loc[idx].values
         initial_loss = self.loss(A, B, X, y, prob)
         print("Initial_loss: {}".format(initial_loss))
         print("Shape of x: {}".format(self.X.shape))
@@ -97,11 +97,11 @@ if __name__ == '__main__':
     import pandas as pd
     X = pd.DataFrame(np.random.randn(34000).reshape(1000, 34))
     y = np.random.randn(1000 * 50).reshape(1000, 50)
-    X["x"] = np.arange(1000)
-    X["y"] = np.arange(1000)
+    X["lat"] = np.arange(1000)
+    X["long"] = np.arange(1000)
     prob_table = pd.DataFrame(np.random.randn(1000 * 50).reshape(1000, 50))
-    prob_table["x"] = X.x
-    prob_table["y"] = X.y
-    X = X[["x", "y"] + [i for i in range(34)]]
+    prob_table["lat"] = X.lat
+    prob_table["long"] = X.long
+    X = X[["lat", "long"] + [i for i in range(34)]]
     clf = WeightedBasicModel().fit(X, y, prob_table=prob_table)
     clf.plot_lost()
