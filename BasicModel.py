@@ -5,8 +5,8 @@ from tqdm import tqdm
 
 class BasicModel:
     def __init__(self):
-        self.A = 3.
-        self.B = .34
+        self.A = 0.079
+        self.B = 0.228
         self.X = None
         self.y = None
 
@@ -25,7 +25,7 @@ class BasicModel:
         loss = np.mean(np.square(prediction - y))
         return loss
         
-    def fit(self, X, y, A=None, B=None, learning_rate=0.000000001, max_iter=10000, theta=0.00000001):
+    def fit(self, X, y, learning_rate=0.0001, beta_1 = 0.90, beta_2 = 0.999 max_iter=10000, theta=0.00000001, epsilon = 10 ** (-8)):
         loss = []
         A = self.A if A is None else A
         B = self.B if B is None else B
@@ -35,8 +35,11 @@ class BasicModel:
         print("Initial_loss: {}".format(initial_loss))
         print("Shape of x: {}".format(self.X.shape))
         print("Shape of y: {}".format(self.y.shape))
-
-        for i in range(max_iter):
+        gradloss_a = grad(self.loss, argnum=0)
+        gradloss_b = grad(self.loss, argnum=1)
+        v_grad_a = 0
+        v_grad_b = 0
+        for i in range(1,max_iter):
             new = self.loss(A, B, X, y)
             if loss:
                 prev = loss[-1]
@@ -44,13 +47,20 @@ class BasicModel:
                     print ("Fak ye bebi wi converge")
                     break
             loss.append(new)
-            gradloss_a = grad(self.loss, argnum=0)
-            gradloss_b = grad(self.loss, argnum=1)
             grad_a = gradloss_a(A, B, X, y)
             grad_b = gradloss_b(A, B, X, y)
-            A = A - learning_rate * grad_a
-            B = B - learning_rate * grad_b
 
+            v_grad_a = (beta_1 * v_grad_a) - ((1 - beta_1) * grad_a)
+            v_grad_b = (beta_1 * v_grad_b) - ((1 - beta_1) * grad_b)
+            s_grad_a = (beta_2 * s_grad_a) - ((1 - beta_2) * grad_a**2)
+            s_grad_b = (beta_2 * s_grad_b) - ((1 - beta_2) * grad_b**2)
+            v_grad_a = v_grad_a / (1 - beta_1**(i))
+            v_grad_b = v_grad_b / (1 - beta_1**(i))
+            s_grad_a = s_grad_a / (1 - beta_2**(i))
+            s_grad_b = s_grad_b / (1 - beta_2**(i))
+            
+            A = A - learning_rate * v_grad_a / np.sqrt(s_grad_a + epsilon)
+            B = B - learning_rate * v_grad_b / np.sqrt(s_grad_b = epsilon)
         self.A = A
         self.B = B
 
