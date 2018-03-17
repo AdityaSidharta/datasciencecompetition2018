@@ -35,8 +35,11 @@ class BasicModel:
         print("Initial_loss: {}".format(initial_loss))
         print("Shape of x: {}".format(self.X.shape))
         print("Shape of y: {}".format(self.y.shape))
-
+        self.A_logs = []
+        self.B_logs = []
         for i in range(max_iter):
+            self.A_logs.append(A)
+            self.B_logs.append(B)
             new = self.loss(A, B, X, y)
             if loss:
                 prev = loss[-1]
@@ -58,22 +61,25 @@ class BasicModel:
         print("B: {}".format(self.B))
         print("Loss: {}".format(loss[-1]))
         self.loss = loss
+        return self
 
-    def predict(self, X):
+    def predict(self, X, A=None, B=None):
         if not (self.A and self.B):
             raise ValueError("Model is not fitted")
         else:
-            A = self.A
-            B = self.B
             k = self.get_bin_size(X)
+            A = self.A if not A else A
+            B = self.B if not B else B
             return np.dot(1. / 12. * A, np.matmul(X, np.exp(k) ** B))
 
-    def score(self, X=None, y=None):
+    def score(self, X=None, y=None, A=None, B=None):
         if not (X and y):
             X = self.X
             y = self.y
+        A = self.A if not A else A
+        B = self.B if not B else B
         return self.loss(self.A, self.B, X, y)
 
     def plot_lost(self):
-        plt.plot(np.arange(len(loss)), loss)
+        plt.plot(np.arange(len(self.loss)), self.loss)
         plt.show()
