@@ -71,4 +71,4 @@ if __name__ == '__main__':
     LATLONG_MAP_PATH = os.path.join(os.getcwd(), "processed_data/map_latlong.csv")
     latlong_map = pd.read_csv(LATLONG_MAP_PATH)
     add_coords(pd.DataFrame(corr).reset_index().rename(columns=station_dict), latlong_map)\
-        .to_csv("toto_corr_3.csv", index=False)
+        .fillna(0).to_csv("toto_corr_4.csv", index=False)

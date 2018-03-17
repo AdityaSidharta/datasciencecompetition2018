@@ -1,12 +1,12 @@
 import autograd.numpy as np
 from autograd import grad
 import matplotlib.pyplot as plt
-from tqdm import tqdm
+
 
 class BasicModel:
     def __init__(self):
-        self.A = 0.079
-        self.B = 0.228
+        self.A = 3.
+        self.B = .34
         self.X = None
         self.y = None
 
@@ -24,40 +24,33 @@ class BasicModel:
         prediction = np.dot(1. / 12. * A, np.matmul(X, np.exp(k)**B))
         loss = np.mean(np.square(prediction - y))
         return loss
-        
-    def fit(self, X, y, learning_rate=0.0001, beta_1 = 0.90, beta_2 = 0.999, max_iter=10000, theta=0.00000001, epsilon = 10 ** (-8)):
+
+    def fit(self, X, y, A=None, B=None, learning_rate=0.000000001, max_iter=10000, theta=0.00000001):
         loss = []
-        A = self.A
-        B = self.B
+        A = self.A if A is None else A
+        B = self.B if B is None else B
         self.X = X
         self.y = y
         initial_loss = self.loss(A, B, X, y)
         print("Initial_loss: {}".format(initial_loss))
         print("Shape of x: {}".format(self.X.shape))
         print("Shape of y: {}".format(self.y.shape))
-        gradloss_a = grad(self.loss, argnum=0)
-        gradloss_b = grad(self.loss, argnum=1)
-        v_grad_a = 0
-        v_grad_b = 0
-        s_grad_a = 0
-        s_grad_b = 0
-        for i in tqdm(range(1,max_iter)):
+
+        for i in range(max_iter):
             new = self.loss(A, B, X, y)
+            if loss:
+                prev = loss[-1]
+                if np.absolute(prev - new) / prev < theta:
+                    print ("Fak ye bebi wi converge")
+                    break
             loss.append(new)
+            gradloss_a = grad(self.loss, argnum=0)
+            gradloss_b = grad(self.loss, argnum=1)
             grad_a = gradloss_a(A, B, X, y)
             grad_b = gradloss_b(A, B, X, y)
+            A = A - learning_rate * grad_a
+            B = B - learning_rate * grad_b
 
-            v_grad_a = (beta_1 * v_grad_a) + ((1 - beta_1) * grad_a)
-            v_grad_b = (beta_1 * v_grad_b) + ((1 - beta_1) * grad_b)
-            s_grad_a = (beta_2 * s_grad_a) + ((1 - beta_2) * grad_a**2)
-            s_grad_b = (beta_2 * s_grad_b) + ((1 - beta_2) * grad_b**2)
-            #v_grad_a = v_grad_a / (1 - beta_1**(i))
-            #v_grad_b = v_grad_b / (1 - beta_1**(i))
-            #s_grad_a = s_grad_a / (1 - beta_2**(i))
-            #s_grad_b = s_grad_b / (1 - beta_2**(i))
-            
-            A = A - learning_rate * v_grad_a / np.sqrt(s_grad_a + epsilon)
-            B = B - learning_rate * v_grad_b / np.sqrt(s_grad_b + epsilon)
         self.A = A
         self.B = B
 
@@ -80,8 +73,7 @@ class BasicModel:
             X = self.X
             y = self.y
         return self.loss(self.A, self.B, X, y)
-    
+
     def plot_lost(self):
-        plt.plot(np.arange(len(self.loss)), self.loss)
+        plt.plot(np.arange(len(loss)), loss)
         plt.show()
-    
